@@ -7,7 +7,7 @@
 //
 
 #import "NSDictionary+MTLJSONKeyPath.h"
-
+#import "NSArray+NTLJSONKeyPath.h"
 #import "MTLJSONAdapter.h"
 
 @implementation NSDictionary (MTLJSONKeyPath)
@@ -21,7 +21,7 @@
 		// affect the last value of the path.
 		if (result == nil || result == NSNull.null) break;
 
-		if (![result isKindOfClass:NSDictionary.class]) {
+		if (![result isKindOfClass:NSDictionary.class] && ![result isKindOfClass:[NSArray class]]) {
 			if (error != NULL) {
 				NSDictionary *userInfo = @{
 					NSLocalizedDescriptionKey: NSLocalizedString(@"Invalid JSON dictionary", @""),
@@ -32,11 +32,15 @@
 			}
 
 			if (success != NULL) *success = NO;
-
+			
 			return nil;
 		}
 
-		result = result[component];
+		if ([result isKindOfClass:NSDictionary.class]) {
+			result = result[component];
+		} else if ([result isKindOfClass:[NSArray class]]) {
+			result = [(NSArray *)result mtl_valueForJSONKeyPath:component success:success error:error];
+		}
 	}
 
 	if (success != NULL) *success = YES;
